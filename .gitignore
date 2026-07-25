@@ -1,0 +1,17 @@
+# Python virtual environment
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS & IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Temporary video sample files
+data/custom_samples/*.mp4
+data/custom_samples/*.avi
+data/custom_samples/*.mov

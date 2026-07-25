@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Surveillance Anomaly Detection System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-background">
+        <div class="cyber-grid"></div>
+        <div class="ambient-glow glow-1"></div>
+        <div class="ambient-glow glow-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-shield-cat brand-icon"></i>
+                    <span class="pulse-ring"></span>
+                </div>
+                <div class="brand-text">
+                    <h1>A.I. SURVEILLANCE ANOMALY DETECTOR</h1>
+                    <span class="sub-text">Deep Learning & Transformer Action Recognition Engine</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="system-status">
+                    <div class="status-badge" id="hfStatusBadge">
+                        <span class="status-dot green"></span>
+                        <span id="hfStatusText">HF Hub: SantoshDN</span>
+                    </div>
+                    <div class="status-badge live">
+                        <span class="status-dot pulse-red"></span>
+                        <span>LIVE ENGINE</span>
+                    </div>
+                    <button class="btn-profile" id="btnOpenProfile">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Model Profile</span>
+                    </button>
+                    <div class="time-display" id="clockDisplay">00:00:00</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Layout -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Surveillance Video Feed & Controls -->
+            <section class="panel video-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-video"></i> Surveillance Video Stream Analysis</h2>
+                    <div class="tab-actions">
+                        <button class="tab-btn active" id="btnUploadTab"><i class="fa-solid fa-upload"></i> Video File Upload</button>
+                        <button class="tab-btn" id="btnWebcamTab"><i class="fa-solid fa-camera"></i> Live WebCam Access</button>
+                        <button class="tab-btn" id="btnLiveTab"><i class="fa-solid fa-tower-cell"></i> CCTV Stream Simulator</button>
+                    </div>
+                </div>
+
+                <!-- Video Viewport & Scanning Overlay -->
+                <div class="video-container" id="videoContainer">
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-icon-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                            <div class="icon-glow"></div>
+                        </div>
+                        <h3>Drag & Drop Surveillance Clip</h3>
+                        <p>Supports MP4, AVI, MOV, WEBM (Kaggle Ano-AAD Dataset Format)</p>
+                        <div class="drop-actions-row">
+                            <label for="videoFileInput" class="btn-primary">
+                                <i class="fa-solid fa-folder-open"></i> Browse Video Clip
+                            </label>
+                            <button class="btn-webcam-quick" id="btnQuickWebcam" type="button">
+                                <i class="fa-solid fa-video"></i> Start Live WebCam Feed
+                            </button>
+                        </div>
+                        <input type="file" id="videoFileInput" accept="video/*" hidden>
+                        
+                        <!-- Quick Test Preset Buttons -->
+                        <div class="preset-samples">
+                            <span>Quick Simulate Anomaly Categories:</span>
+                            <div class="preset-buttons">
+                                <button class="btn-preset" data-sample="fighting"><i class="fa-solid fa-hand-fist"></i> Fighting</button>
+                                <button class="btn-preset" data-sample="explosion"><i class="fa-solid fa-explosion"></i> Explosion</button>
+                                <button class="btn-preset" data-sample="accident"><i class="fa-solid fa-car-burst"></i> Road Accident</button>
+                                <button class="btn-preset" data-sample="burglary"><i class="fa-solid fa-user-ninja"></i> Burglary</button>
+                                <button class="btn-preset" data-sample="arrest"><i class="fa-solid fa-handcuffs"></i> Arrest</button>
+                                <button class="btn-preset" data-sample="vandalism"><i class="fa-solid fa-spray-can"></i> Vandalism</button>
+                                <button class="btn-preset" data-sample="robbery"><i class="fa-solid fa-mask"></i> Robbery</button>
+                                <button class="btn-preset" data-sample="traffic"><i class="fa-solid fa-car-burst"></i> Traffic</button>
+                                <button class="btn-preset" data-sample="normal"><i class="fa-solid fa-circle-check"></i> Normal</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="player-wrapper hidden" id="playerWrapper">
+                        <video id="surveillancePlayer" controls autoplay loop muted></video>
+                        <video id="webcamPlayer" autoplay playsinline muted class="hidden"></video>
+                        
+                        <!-- HUD Scan Overlays -->
+                        <div class="hud-overlay">
+                            <div class="hud-top-bar">
+                                <span class="hud-tag" id="hudCameraTag"><i class="fa-solid fa-camera"></i> CAM-01 [NORTH_GATE]</span>
+                                <span class="hud-tag fps"><i class="fa-solid fa-bolt"></i> 30.0 FPS | 128x128 RES</span>
+                            </div>
+                            <div class="laser-scanner"></div>
+                            <div class="hud-corner top-left"></div>
+                            <div class="hud-corner top-right"></div>
+                            <div class="hud-corner bottom-left"></div>
+                            <div class="hud-corner bottom-right"></div>
+                        </div>
+
+                        <!-- On-Screen Emergency Threat Alert Overlay Banner -->
+                        <div class="anomaly-banner hidden" id="anomalyBanner">
+                            <div class="alert-strobe-icon">
+                                <i class="fa-solid fa-triangle-exclamation alert-icon" id="alertBannerIcon"></i>
+                            </div>
+                            <div class="alert-content">
+                                <span class="alert-title" id="alertBannerTitle">CRITICAL ANOMALY THREAT DETECTED</span>
+                                <span class="alert-desc" id="anomalyBannerText">High Confidence Threat Level</span>
+                            </div>
+                            <span class="alert-conf-pill" id="alertBannerConf">98.5% CONF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run & Reset Actions -->
+                <div class="video-controls">
+                    <button class="btn-primary flex-1" id="btnAnalyze" disabled>
+                        <i class="fa-solid fa-brain"></i> Run Deep Learning Inference
+                    </button>
+                    <button class="btn-secondary" id="btnReset">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+
+                <!-- Real-Time Live Threat Stream Monitor -->
+                <div class="live-threat-monitor" id="liveThreatMonitor">
+                    <div class="monitor-header">
+                        <h4><i class="fa-solid fa-radar pulse-purple"></i> REAL-TIME THREAT STREAM MONITOR</h4>
+                        <span class="live-status-pill" id="monitorStatusPill"><span class="status-dot green"></span> FEED ACTIVE</span>
+                    </div>
+                    <div class="monitor-body">
+                        <div class="monitor-stat-box">
+                            <span class="stat-lbl">CURRENT THREAT STATE</span>
+                            <span class="stat-val green" id="monitorThreatStatus"><i class="fa-solid fa-shield-check"></i> NORMAL SURVEILLANCE</span>
+                        </div>
+                        <div class="monitor-stat-box">
+                            <span class="stat-lbl">INFERENCE LATENCY</span>
+                            <span class="stat-val cyber-cyan" id="monitorLatency">16.4 ms</span>
+                        </div>
+                        <div class="monitor-stat-box">
+                            <span class="stat-lbl">DETECTION PIPELINE</span>
+                            <span class="stat-val purple" id="monitorDetectionMode">YOLOv8 + MobileNetV2</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Real-Time Analytics & Gauges -->
+            <section class="panel analytics-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-chart-line"></i> Live Threat Gauge & Temporal Timeline</h2>
+                </div>
+
+                <!-- Emergency Siren Alert Control Station -->
+                <div class="siren-alert-station green-state" id="sirenAlertStation">
+                    <div class="siren-header">
+                        <div class="siren-title-group">
+                            <div class="siren-light-beacon" id="sirenBeacon">
+                                <div class="beacon-bulb red"></div>
+                                <div class="beacon-bulb blue"></div>
+                                <div class="beacon-ring"></div>
+                            </div>
+                            <div>
+                                <h3><i class="fa-solid fa-lightbulb"></i> EMERGENCY SIREN ALERT STATION</h3>
+                                <span class="siren-subtext" id="sirenStatusSubtext">AI SURVEILLANCE ENGINE • ACTIVE MONITORING</span>
+                            </div>
+                        </div>
+                        
+                        <div class="siren-controls">
+                            <button class="btn-siren-toggle" id="btnToggleSiren" type="button" title="Toggle Siren Sound">
+                                <i class="fa-solid fa-volume-xmark" id="sirenSoundIcon"></i>
+                                <span id="sirenSoundText">Siren Muted</span>
+                            </button>
+                            <button class="btn-siren-test" id="btnTestSiren" type="button" title="Test Emergency Siren">
+                                <i class="fa-solid fa-bell"></i> Test Sound
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="siren-banner-display" id="sirenBannerDisplay">
+                        <div class="siren-status-icon-wrapper">
+                            <i class="fa-solid fa-shield-check" id="sirenBannerIcon"></i>
+                        </div>
+                        <div class="siren-banner-info">
+                            <span class="siren-banner-title" id="sirenBannerTitle">SYSTEM SECURE — ALL CLEAR</span>
+                            <span class="siren-banner-desc" id="sirenBannerDesc">Surveillance video feed analyzed. No threat detected.</span>
+                        </div>
+                        <div class="siren-pulse-badge" id="sirenPulseBadge">SYSTEM SECURE</div>
+                    </div>
+                </div>
+
+                <!-- Threat Meter, Top Class & Person Count Cards -->
+                <div class="metrics-row">
+                    <!-- Threat Gauge Card -->
+                    <div class="metric-card threat-card">
+                        <div class="card-label">THREAT SEVERITY SCORE</div>
+                        <div class="gauge-container">
+                            <div class="gauge-outer">
+                                <div class="gauge-inner">
+                                    <span class="gauge-val" id="threatScoreVal">12%</span>
+                                    <span class="gauge-lbl" id="threatScoreText">LOW RISK</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Classification Card -->
+                    <div class="metric-card prediction-card">
+                        <div class="card-label">PRIMARY CLASSIFICATION</div>
+                        <div class="top-class-badge" id="topClassBadge">
+                            <i class="fa-solid fa-shield-check" id="topClassIcon"></i>
+                            <span id="topClassName">Normal Videos</span>
+                        </div>
+                        <div class="confidence-bar-wrapper">
+                            <div class="confidence-info">
+                                <span>Confidence</span>
+                                <span id="topConfidenceVal">94.5%</span>
+                            </div>
+                            <div class="confidence-track">
+                                <div class="confidence-fill" id="topConfidenceFill" style="width: 94.5%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Person Detection Card -->
+                    <div class="metric-card person-card">
+                        <div class="card-label">YOLO PERSON & OBJECT DETECTOR</div>
+                        <div class="person-count-wrapper">
+                            <i class="fa-solid fa-users-viewfinder person-icon"></i>
+                            <div class="person-num-box">
+                                <span class="person-count-val" id="personCountVal">0</span>
+                                <span class="person-count-lbl">Persons Detected</span>
+                            </div>
+                        </div>
+                        <div class="detected-objects-wrapper" id="detectedObjectsWrapper">
+                            <span class="obj-label">Objects:</span>
+                            <div class="obj-chips" id="detectedObjectsChips">
+                                <span class="obj-chip">none</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Universal Multi-Category AI Intelligence Sensor Station -->
+                <div class="multi-category-sensor-panel green-state" id="multiCategorySensorPanel">
+                    <div class="sensor-header">
+                        <div class="sensor-title">
+                            <div class="sensor-icon-glow" id="sensorIconGlow">
+                                <i class="fa-solid fa-layer-group" id="sensorHeaderIcon"></i>
+                            </div>
+                            <div>
+                                <h4 id="sensorHeaderTitle">UNIVERSAL AI SURVEILLANCE & ANOMALY SENSOR</h4>
+                                <span class="sensor-sub" id="sensorHeaderSub">AUTOMATIC MULTI-CATEGORY THREAT & MOTION DETECTOR</span>
+                            </div>
+                        </div>
+                        <span class="sensor-badge green" id="sensorBadge">SYSTEM SECURE</span>
+                    </div>
+                    
+                    <div class="sensor-stats-grid">
+                        <div class="sensor-stat">
+                            <span class="s-lbl" id="sensorStat1Lbl">Entities & Targets</span>
+                            <span class="s-val cyber-cyan" id="sensorEntitiesCount">0 Targets Detected</span>
+                        </div>
+                        <div class="sensor-stat">
+                            <span class="s-lbl" id="sensorStat2Lbl">Motion & Feature Delta</span>
+                            <span class="s-val purple" id="sensorMotionIndex">0.02 Delta (Normal)</span>
+                        </div>
+                        <div class="sensor-stat">
+                            <span class="s-lbl" id="sensorStat3Lbl">Category Alert Sensor</span>
+                            <span class="s-val green" id="sensorStateLabel">NORMAL SURVEILLANCE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anomaly Risk Graph -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-wave-square"></i> Sequence Anomaly Risk Curve</h3>
+                        <span class="chart-subtitle">Frame-by-Frame Temporal Context (20 Steps)</span>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Probability Distribution List -->
+                <div class="probabilities-container">
+                    <h3><i class="fa-solid fa-list-check"></i> 10-Class Anomaly Probability Distribution</h3>
+                    <div class="prob-grid" id="probabilityBars">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Panel: System Events & Log Stream -->
+            <section class="panel logs-panel full-width">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-terminal"></i> Surveillance Audit Log & System Events</h2>
+                    <div class="log-filters">
+                        <button class="filter-btn active" data-filter="all">All Logs</button>
+                        <button class="filter-btn" data-filter="anomaly">Anomalies</button>
+                        <button class="filter-btn" data-filter="system">System</button>
+                    </div>
+                </div>
+                <div class="log-stream" id="logStream">
+                    <div class="log-entry system">
+                        <span class="log-time">[00:00:01]</span>
+                        <span class="log-badge info">INFO</span>
+                        <span class="log-msg">System initialized. Connected to Hugging Face Model Hub: SantoshDN/ai-enable-anomaly-detection</span>
+                    </div>
+                </div>
+            <!-- Model Evaluation & Classification Metrics Matrix Panel -->
+            <section class="panel metrics-panel" id="metricsPanel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-chart-column"></i> Model Accuracy & Classification Evaluation Report (best_model.keras)</h2>
+                    <div class="status-badge green">
+                        <i class="fa-solid fa-check-double"></i> 98.4% ACCURACY CALIBRATED
+                    </div>
+                </div>
+
+                <!-- 4 Top Metric Summary Cards -->
+                <div class="metrics-summary-cards">
+                    <div class="metric-card accent-green">
+                        <span class="mc-title">Overall Accuracy</span>
+                        <span class="mc-value" id="cardAccuracy">98.4%</span>
+                        <span class="mc-sub">Deep Learning Validation Score</span>
+                    </div>
+                    <div class="metric-card accent-cyan">
+                        <span class="mc-title">Macro Avg F1-Score</span>
+                        <span class="mc-value" id="cardMacroF1">0.979</span>
+                        <span class="mc-sub">Unweighted Class Average</span>
+                    </div>
+                    <div class="metric-card accent-purple">
+                        <span class="mc-title">Weighted Avg F1-Score</span>
+                        <span class="mc-value" id="cardWeightedF1">0.984</span>
+                        <span class="mc-sub">Sample-Weighted Average</span>
+                    </div>
+                    <div class="metric-card accent-orange">
+                        <span class="mc-title">Evaluation Support</span>
+                        <span class="mc-value" id="cardSupport">1,950</span>
+                        <span class="mc-sub">Total Video Sequences</span>
+                    </div>
+                </div>
+
+                <!-- Full Per-Class Metrics Table -->
+                <div class="metrics-table-wrapper">
+                    <table class="metrics-table" id="metricsTable">
+                        <thead>
+                            <tr>
+                                <th>Target Category / Metric</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1-Score</th>
+                                <th>Support (Samples)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metricsTableBody">
+                            <!-- Populated dynamically via JS from /api/model/metrics -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Model Profile & Specs Drawer/Modal -->
+    <div class="modal-overlay hidden" id="profileModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-microchip"></i> Model System Profile & Architecture Specs</h3>
+                <button class="btn-close" id="btnCloseProfile"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-grid">
+                    <div class="profile-item">
+                        <span class="item-label">Active Model Repository</span>
+                        <span class="item-val highlight"><i class="fa-brands fa-huggingface"></i> SantoshDN/ai-enable-anomaly-detection</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="item-label">Deep Learning Architecture</span>
+                        <span class="item-val">MobileNetV2 / EfficientNetB0 + Temporal Transformer + Bi-LSTM</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="item-label">Input Tensor Resolution</span>
+                        <span class="item-val">20 Frames Sequence × (128 × 128 × 3 RGB)</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="item-label">Total Parameters</span>
+                        <span class="item-val">~4,406,957 Params (16.81 MB)</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="item-label">Inference Latency</span>
+                        <span class="item-val">~18ms per video sequence</span>
+                    </div>
+                    <div class="profile-item">
+                        <span class="item-label">Target Dataset</span>
+                        <span class="item-val">Kaggle Ano-AAD Video Surveillance Dataset</span>
+                    </div>
+                </div>
+
+                <div class="classes-chips-wrapper">
+                    <h4>Supported Anomaly Classes (10 Categories):</h4>
+                    <div class="chips-container">
+                        <span class="chip danger">Arrest</span>
+                        <span class="chip danger">Ill-treatment</span>
+                        <span class="chip danger">Explosion</span>
+                        <span class="chip danger">violence</span>
+                        <span class="chip warning">Traffic Irregularities</span>
+                        <span class="chip danger">Attack</span>
+                        <span class="chip danger">Burglary</span>
+                        <span class="chip danger">Fighting</span>
+                        <span class="chip danger">fire-raising</span>
+                        <span class="chip normal">Normal Videos</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="btnModalOk">Close Specification Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
