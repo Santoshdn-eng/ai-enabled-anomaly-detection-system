@@ -16,6 +16,7 @@ def create_sample_videos():
 
     # 1. Normal Video Clip
     normal_path = os.path.join(output_dir, "sample_normal_surveillance.mp4")
+    # pyrefly: ignore [missing-attribute]
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out_normal = cv2.VideoWriter(normal_path, fourcc, fps, (width, height))
 
