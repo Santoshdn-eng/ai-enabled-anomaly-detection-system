@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-surveillance-anomaly-detector
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: MODEL_PATH
+        value: best_model.keras
+      - key: HF_REPO_ID
+        value: SantoshDN/ai-enable-anomaly-detection

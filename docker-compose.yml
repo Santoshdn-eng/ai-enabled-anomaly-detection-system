@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  ai-anomaly-detection:
+    build: .
+    container_name: ai_surveillance_anomaly_detection
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=best_model.keras
+      - HF_REPO_ID=SantoshDN/ai-enable-anomaly-detection
+    restart: unless-stopped
+    volumes:
+      - .:/app

@@ -15,9 +15,13 @@ from fastapi.middleware.cors import CORSMiddleware
 # pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 # pyrefly: ignore [missing-import]
-from fastapi.responses import JSONResponse, FileResponse
+# pyrefly: ignore [missing-import]
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
+from pydantic import BaseModel, Field
+import asyncio
 
 from backend.model_engine import AnomalyDetectorEngine
+from backend.cctv_streamer import CCTVStreamManager
 
 app = FastAPI(
     title="AI Enabled Anomaly Detection API",
@@ -34,16 +38,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Engine
+# Initialize Engine & CCTV Stream Manager
 MODEL_PATH = os.getenv("MODEL_PATH", "best_model.keras")
 HF_REPO = os.getenv("HF_REPO_ID", "SantoshDN/ai-enable-anomaly-detection")
 
 engine = AnomalyDetectorEngine(model_path=MODEL_PATH, hf_repo_id=HF_REPO)
+cctv_manager = CCTVStreamManager(engine)
 
 # Serve Frontend static files if available
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+class CCTVConnectRequest(BaseModel):
+    camera_id: str = Field(..., example="cam_02")
+    name: str = Field(..., example="North Entrance CCTV")
+    source_url: str = Field(..., example="rtsp://admin:pass@192.168.1.120:554/stream1")
 
 @app.get("/")
 def read_root():
@@ -72,7 +82,8 @@ def health_check():
         "status": "healthy",
         "model_loaded": engine.model is not None,
         "hf_repo": engine.hf_repo_id,
-        "classes": engine.classes
+        "classes": engine.classes,
+        "cctv_streams": len(cctv_manager.cameras)
     }
 
 @app.post("/api/predict")
@@ -92,17 +103,94 @@ async def predict_anomaly(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
 
 @app.post("/api/predict_frame")
-async def predict_live_frame(file: UploadFile = File(...)):
+async def predict_live_frame(file: UploadFile = File(...), sensitivity: float = 0.60):
     """
-    Real-time Live WebCam frame snapshot inference endpoint.
+    Real-time Live WebCam / frame snapshot inference endpoint.
     Performs YOLOv8 Person/Object detection and Deep Learning anomaly analysis.
     """
     try:
         contents = await file.read()
-        result = engine.process_frame_image(contents)
+        result = engine.process_frame_image(contents, sensitivity_threshold=sensitivity)
         return JSONResponse(content=result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Live frame inference error: {str(e)}")
+
+# --- CCTV STREAM MANAGER ENDPOINTS ---
+
+@app.get("/api/cctv/streams")
+def list_cctv_streams():
+    """Returns list of active CCTV camera stream workers and their current live threat status."""
+    return cctv_manager.list_cameras()
+
+@app.post("/api/cctv/connect")
+def connect_cctv_stream(req: CCTVConnectRequest):
+    """Connect to a new RTSP, RTMP, HTTP/MJPEG, or Webcam stream URL globally."""
+    try:
+        worker = cctv_manager.add_camera(req.camera_id, req.name, req.source_url)
+        return {
+            "status": "success",
+            "message": f"CCTV Stream worker '{req.name}' connected.",
+            "camera": worker.get_status_info()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not connect CCTV stream: {e}")
+
+@app.delete("/api/cctv/disconnect/{camera_id}")
+def disconnect_cctv_stream(camera_id: str):
+    """Disconnect and remove an active CCTV stream."""
+    if camera_id not in cctv_manager.cameras:
+        raise HTTPException(status_code=404, detail="Camera ID not found")
+    cctv_manager.remove_camera(camera_id)
+    return {"status": "success", "message": f"Camera '{camera_id}' disconnected."}
+
+@app.get("/api/cctv/mjpeg/{camera_id}")
+def get_cctv_mjpeg_stream(camera_id: str):
+    """
+    Streams live annotated MJPEG video from configured CCTV camera stream directly to browser / video tags.
+    """
+    worker = cctv_manager.get_camera(camera_id)
+    if not worker:
+        raise HTTPException(status_code=404, detail="CCTV Camera not found")
+
+    def mjpeg_generator():
+        while worker.is_running:
+            jpg_bytes = worker.get_latest_mjpeg_bytes()
+            if jpg_bytes:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + jpg_bytes + b'\r\n')
+            time.sleep(0.04)
+
+    return StreamingResponse(mjpeg_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+@app.websocket("/ws/cctv/{camera_id}")
+async def websocket_cctv_stream(websocket: WebSocket, camera_id: str):
+    """
+    Continuous WebSocket endpoint streaming frame-by-frame JSON detection results,
+    YOLOv8 bounding boxes, and pose keypoint graphics for a specific CCTV camera feed.
+    """
+    await websocket.accept()
+    worker = cctv_manager.get_camera(camera_id)
+    if not worker:
+        await websocket.send_json({"error": f"Camera {camera_id} not found"})
+        await websocket.close()
+        return
+
+    print(f"⚡ [WebSocket] Client listening to CCTV stream '{camera_id}'")
+    try:
+        last_sent_time = 0.0
+        while worker.is_running:
+            if worker.last_update_time > last_sent_time and worker.latest_detection:
+                last_sent_time = worker.last_update_time
+                await websocket.send_json(worker.latest_detection)
+            await asyncio.sleep(0.05)
+    except WebSocketDisconnect:
+        print(f"⚡ [WebSocket] Client disconnected from CCTV '{camera_id}'")
+    except Exception as e:
+        print(f"[WebSocket] Error on CCTV '{camera_id}': {e}")
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 @app.get("/api/model/info")
 def get_model_info():
@@ -127,10 +215,10 @@ def get_model_classification_report():
     return engine.get_model_classification_metrics()
 
 @app.websocket("/ws/live")
-async def websocket_live_detection(websocket: WebSocket):
+async def websocket_live_detection(websocket: WebSocket, sensitivity: float = 0.60):
     """
     Real-time Interactive WebSocket endpoint for continuous live camera frame analysis.
-    Clients stream binary frame images (JPEG) and receive instant anomaly predictions.
+    Clients stream binary frame images (JPEG) and receive instant anomaly predictions & YOLO graphics.
     """
     await websocket.accept()
     print("⚡ [WebSocket] Client connected to live camera detection stream.")
@@ -139,8 +227,8 @@ async def websocket_live_detection(websocket: WebSocket):
             data = await websocket.receive_bytes()
             if not data:
                 continue
-            # Perform live frame inference
-            result = engine.process_frame_image(data)
+            # Perform live frame inference asynchronously in worker thread
+            result = await asyncio.to_thread(engine.process_frame_image, data, sensitivity_threshold=sensitivity)
             await websocket.send_json(result)
     except WebSocketDisconnect:
         print("⚡ [WebSocket] Client disconnected from live stream.")
@@ -155,3 +243,4 @@ if __name__ == "__main__":
     # pyrefly: ignore [missing-import]
     import uvicorn
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+
