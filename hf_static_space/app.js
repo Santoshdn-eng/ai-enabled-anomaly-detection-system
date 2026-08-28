@@ -318,6 +318,13 @@ document.addEventListener('DOMContentLoaded', () => {
         playerWrapper.classList.remove('hidden');
         btnAnalyze.disabled = false;
         addLog('system', 'INFO', `Loaded video clip: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+        
+        // Auto-trigger deep learning inference execution immediately
+        setTimeout(() => {
+            if (btnAnalyze && !btnAnalyze.disabled) {
+                btnAnalyze.click();
+            }
+        }, 150);
     }
 
     // 8. Preset Sample Simulator Buttons

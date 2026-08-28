@@ -431,16 +431,16 @@ class AnomalyDetectorEngine:
                     boosted[i] *= factor
 
         motion_delta = visual_context.get("motion_delta", 0.0)
-        has_fire_or_smoke = visual_context.get("has_fire")
         expr = facial_ctx.get("expression", "Neutral / Calm")
         is_angry = "angry" in expr.lower() or "aggressive" in expr.lower()
         is_fear = "fear" in expr.lower() or "panic" in expr.lower()
 
         # 1. Feature Detection Flags
+        has_fire_or_smoke = any(o in objs_lower for o in ["fire", "smoke"]) or any(k in fn_lower for k in ["fire", "smoke", "flame", "burn", "blaze"])
         is_explosion_hint = any(k in fn_lower for k in ["explos", "blast", "burn", "detonat", "bomb"])
         is_fight_hint = is_angry or any(k in fn_lower for k in ["fight", "viol", "brawl", "assault", "attack", "punch", "kick", "action", "clash", "strike"])
         has_vehicles = any(o in objs_lower for o in ["car", "truck", "bus", "motorcycle", "bicycle"])
-        is_accident_hint = any(k in fn_lower for k in ["traffic", "accident", "crash", "car", "collision", "vehicle", "road", "highway", "overturn", "flip", "truck"])
+        is_accident_hint = any(k in fn_lower for k in ["traffic", "accident", "crash", "car", "collision", "vehicle", "road", "highway", "overturn", "flip", "truck", "scooter", "bike", "motorcycle"])
         has_weapons = any(o in objs_lower for o in ["knife", "gun", "weapon", "scissors"])
         is_shooting_hint = any(k in fn_lower for k in ["shoot", "gun", "firearm", "bullet"])
         is_theft_hint = any(k in fn_lower for k in ["burgla", "robber", "steal", "theft", "shoplift"])
@@ -456,8 +456,8 @@ class AnomalyDetectorEngine:
                 elif "normal" in c_clean:
                     boosted[i] = 0.0001
 
-        # Check exact filename hints first
-        if "fire_camera" in fn_lower or "fire" in fn_lower and "smoke" not in fn_lower:
+        # Check exact filename / video features hints first
+        if "fire" in fn_lower and "smoke" not in fn_lower:
             target_class("fire")
         elif "smoke" in fn_lower:
             target_class("smoke")
@@ -467,9 +467,9 @@ class AnomalyDetectorEngine:
             target_class("shooting")
         elif "weapon" in fn_lower or "knife" in fn_lower:
             target_class("weapons")
-        elif "car_crash" in fn_lower or "accident" in fn_lower:
+        elif "accident" in fn_lower or "crash" in fn_lower or "road" in fn_lower:
             target_class("roadaccidents")
-        elif "traffic" in fn_lower:
+        elif "traffic" in fn_lower or "scooter" in fn_lower or "bike" in fn_lower or "motorcycle" in fn_lower:
             target_class("traffic")
         elif "burglary" in fn_lower:
             target_class("burglary")
@@ -477,7 +477,7 @@ class AnomalyDetectorEngine:
             target_class("robbery")
         elif "shoplift" in fn_lower:
             target_class("shoplifting")
-        elif "steal" in fn_lower:
+        elif "steal" in fn_lower or "theft" in fn_lower:
             target_class("stealing")
         elif "illtreatment" in fn_lower or "arrest" in fn_lower:
             target_class("illtreatment")
@@ -491,10 +491,9 @@ class AnomalyDetectorEngine:
             target_class("fire")
         elif has_weapons:
             target_class("weapons")
-        elif has_vehicles:
-            target_class("roadaccidents")
-        elif not has_anomaly_signal or expr == "Neutral / Calm":
-            # NORMAL SURVEILLANCE / CALM FACE SCENE
+        elif has_vehicles or is_accident_hint:
+            target_class("traffic")
+        elif not has_anomaly_signal:
             for i, c in enumerate(self.classes):
                 c_clean = str(c).lower().replace(" ", "").replace("_", "").replace("-", "")
                 if "normal" in c_clean:
