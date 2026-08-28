@@ -586,12 +586,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const sensorSub = document.getElementById('sensorHeaderSub');
         const sensorIcon = document.getElementById('sensorHeaderIcon');
 
-        const topLower = topClass.toLowerCase();
-        const objCount = (result.detected_objects || []).length;
-        const pCount = result.person_count || 0;
+        const objCount = (result.detected_objects || ["person"]).length;
+        const pCount = (result.person_count !== undefined && result.person_count !== null && result.person_count > 0) ? result.person_count : 1;
 
         if (sensorEntitiesVal) {
-            sensorEntitiesVal.textContent = `${pCount} Persons, ${objCount} Objects`;
+            sensorEntitiesVal.textContent = `${pCount} Person${pCount > 1 ? 's' : ''}, ${objCount} Object${objCount > 1 ? 's' : ''}`;
         }
 
         if (sensorMotionVal) {
@@ -669,10 +668,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const personCountVal = document.getElementById('personCountVal');
         const detectedObjectsChips = document.getElementById('detectedObjectsChips');
         if (personCountVal) {
-            personCountVal.textContent = result.person_count !== undefined ? result.person_count : (isAnomaly ? 2 : 1);
+            personCountVal.textContent = pCount;
         }
         if (detectedObjectsChips) {
-            const objs = result.detected_objects || (isAnomaly ? ["person", "motion"] : ["person"]);
+            const objs = (result.detected_objects && result.detected_objects.length > 0) ? result.detected_objects : ["person"];
             detectedObjectsChips.innerHTML = objs.map(o => `<span class="obj-chip">${o}</span>`).join('');
         }
 
