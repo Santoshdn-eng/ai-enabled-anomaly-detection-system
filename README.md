@@ -22,7 +22,7 @@ The **AI-Enabled Autonomous Surveillance & Anomaly Detection System** is an end-
 The platform classifies **15 distinct security anomaly categories** with **100.0% evaluation precision**, fusing **Deep Temporal Neural Networks (Bi-LSTM + TimeDistributed CNNs)**, **Ultralytics YOLOv8 Pose Estimation (`yolov8n-pose.pt`)**, and **Facial Expression Emotion AI (`best_model.keras`)**.
 
 ### 🌐 Live Demos & Deployment Links:
-- **Hugging Face Space Live App:** [https://santoshdn-ai-surveillance-anomaly-detector.hf.space](https://santoshdn-ai-surveillance-anomaly-detector.hf.space)
+- **Hugging Face Space Live App:** [https://huggingface.co/spaces/SantoshDN/ai-surveillance-anomaly-detector](https://huggingface.co/spaces/SantoshDN/ai-surveillance-anomaly-detector)
 - **Model Hub Repository:** [`SantoshDN/ai-enable-anomaly-detection`](https://huggingface.co/SantoshDN/ai-enable-anomaly-detection)
 
 ---
@@ -187,4 +187,4 @@ Access the application at `http://localhost:8000`.
 
 - **Author:** Santosh Debnath
 - **Hugging Face Hub:** [SantoshDN](https://huggingface.co/SantoshDN)
-- **Live Demo Space:** [Hugging Face Space](https://santoshdn-ai-surveillance-anomaly-detector.hf.space)
+- **Live Demo Space:** [Hugging Face Space](https://huggingface.co/spaces/SantoshDN/ai-surveillance-anomaly-detector)
